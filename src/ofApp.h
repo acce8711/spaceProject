@@ -1,42 +1,10 @@
 #pragma once
 
 #include "ofMain.h"
-#include "Config.h"
-#include "Projectile.h"
-#include "ofxImGui.h"
 
 class ofApp : public ofBaseApp{
 
 	public:
-
-		//spaceship vars
-
-		//to-do
-		//spaceship rotation
-		//two jets affecting position, velocity, angle
-		//collision detection 
-		//offscreen boundary
-		//projectile shooting from the spaceship
-
-		ofVec2f m_spaceshipPos;
-		float m_spaceshipRadius;
-		float m_spaceshipAngle;
-		float m_leftJetForce;
-		float m_rightJetForce;
-
-		float m_projectileSpeed;
-
-		//images
-
-		ofImage m_startMenu;
-
-		//ImGUI
-		ofxImGui::Gui m_gui;
-
-		//game modes
-		int m_gameMode;
-		enum GAME_MODE {start, playing, gameover};
-
 		void setup();
 		void update();
 		void draw();
