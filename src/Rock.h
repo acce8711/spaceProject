@@ -1,6 +1,7 @@
 #pragma once
 
 #include "ofMain.h"
+#include "Config.h"
 
 class Rock
 {
@@ -8,6 +9,7 @@ public:
 	ofVec2f m_rockPos;
 	float m_rockSpeed;
 	float m_rockAngle;
+	int m_rockType;
 	ofImage m_rockImage[5];
 	ofImage m_explodedRockImage;
 
@@ -23,4 +25,8 @@ public:
 
 	//rock draw function
 	//draw the rock at the position and rotation
+
+	void setup();
+	void update();
+	void draw();
 };

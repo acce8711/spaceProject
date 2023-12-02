@@ -3,6 +3,7 @@
 #include "ofMain.h"
 #include "Config.h"
 #include "Projectile.h"
+#include "Rock.h"
 #include "ofxImGui.h"
 
 class ofApp : public ofBaseApp{
@@ -21,10 +22,14 @@ class ofApp : public ofBaseApp{
 		ofVec2f m_spaceshipPos;
 		float m_spaceshipRadius;
 		float m_spaceshipAngle;
+		float m_spaceshipSpeed;
 		float m_leftJetForce;
 		float m_rightJetForce;
 
-		float m_projectileSpeed;
+		vector<Projectile> m_projectiles;
+		vector<Rock> m_rocks;
+		int m_frames;
+
 
 		//images
 
@@ -52,5 +57,7 @@ class ofApp : public ofBaseApp{
 		void windowResized(int w, int h);
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
-		
+
+		void createRock();
+		void updateProjectiles();
 };
