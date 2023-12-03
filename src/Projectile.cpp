@@ -7,7 +7,6 @@ void Projectile::setup(ofVec2f pos, float angle, float speed)
 	m_projectileAngle = ofDegToRad(angle - 90.0f);
 	m_xSpeed = m_projectileSpeed * cos(m_projectileAngle);
 	m_ySpeed = m_projectileSpeed * sin(m_projectileAngle);
-	cout << m_xSpeed << " and y: " << m_ySpeed << endl;
  	m_radius = 10.0f;
 	cout << m_projectilePos << endl;
 }
@@ -16,7 +15,6 @@ void Projectile::update()
 {
 	m_projectilePos.y += m_ySpeed;
 	m_projectilePos.x += m_xSpeed;
-	cout << m_projectilePos << endl;
 }
 
 void Projectile::draw()

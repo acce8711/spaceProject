@@ -23,24 +23,46 @@ class ofApp : public ofBaseApp{
 		float m_spaceshipRadius;
 		float m_spaceshipAngle;
 		float m_spaceshipSpeed;
-		float m_leftJetForce;
-		float m_rightJetForce;
+
 
 		vector<Projectile> m_projectiles;
+		vector<Star> m_stars;
 		vector<Rock> m_rocks;
 		int m_frames;
-
+		bool m_crashed;
+		float m_crashTime;
+		float m_lastShotTime;
+		ofVec2f m_crashPos;
+		int m_starsCollected;
+		int m_rocksHit;
+		float m_pressTime;
 
 		//images
-
 		ofImage m_startMenu;
+		ofImage m_instructionsImage;
+		ofImage m_playImage;
+		ofImage m_gameOverImage;
+		ofImage m_spaceshipImage;
+		ofImage m_starUI;
+		ofImage m_rockUI;
+		ofImage m_explosionImage;
+
+		//sounds
+		ofSoundPlayer m_musicPlayer;
+		ofSoundPlayer m_sfxPlayer;
+		std::string m_hitSFX;
+		std::string m_shootSFX;
+		std::string m_collectSFX;
+
+		//Font
+		ofTrueTypeFont m_slackeyFont;
 
 		//ImGUI
 		ofxImGui::Gui m_gui;
 
 		//game modes
 		int m_gameMode;
-		enum GAME_MODE {start, playing, gameover};
+		enum GAME_MODE {start, instructions, playing, gameover};
 
 		void setup();
 		void update();
@@ -55,9 +77,15 @@ class ofApp : public ofBaseApp{
 		void mouseEntered(int x, int y);
 		void mouseExited(int x, int y);
 		void windowResized(int w, int h);
-		void dragEvent(ofDragInfo dragInfo);
-		void gotMessage(ofMessage msg);
+
 
 		void createRock();
+		void createStars();
 		void updateProjectiles();
+		void updateRocks();
+		void updateStars();
+		void checkRockCollision();
+		void checkProjectileCollision();
+		void checkStarCollision();
+		void resetGame();
 };

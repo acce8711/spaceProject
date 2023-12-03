@@ -3,15 +3,13 @@
 #include "ofMain.h"
 #include "Config.h"
 
-class Rock
+class SpatialObject
 {
 public:
-	ofVec2f m_rockPos;
-	float m_rockSpeed;
-	float m_rockAngle;
-	int m_rockType;
-	ofImage m_rockImage[5];
-	ofImage m_explodedRockImage;
+	ofVec2f m_pos;
+	float m_speed;
+	float m_angle;
+	float m_radius;
 
 	//rocks will be spawned from the top of the screen at intervals
 	//rocks will rotate and move down
@@ -26,7 +24,23 @@ public:
 	//rock draw function
 	//draw the rock at the position and rotation
 
-	void setup();
 	void update();
+};
+
+class Rock : public SpatialObject
+{
+public:
+	int m_type;
+	ofImage m_rockImage[5];
+	ofImage m_explodedRockImage;
+	void setup();
+	void draw();
+};
+
+class Star : public SpatialObject
+{
+public:
+	ofImage m_starImage;
+	void setup();
 	void draw();
 };
