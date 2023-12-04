@@ -16,7 +16,7 @@ void Rock::setup()
 	m_rockImage[2].load("rock3.png");
 	m_rockImage[3].load("rock4.png");
 	m_rockImage[4].load("rock5.png");
-	m_type = ofRandom(0, 6);
+	m_type = ofRandom(0, 4);
 
 	m_angle = 0.0f;
 	m_speed = 2.0f;

@@ -4,7 +4,8 @@
 #include "Config.h"
 #include "Projectile.h"
 #include "Rock.h"
-#include "ofxImGui.h"
+//#include "ofxImGui.h"
+#include "ofEvents.h"
 
 class ofApp : public ofBaseApp{
 
@@ -58,7 +59,7 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont m_slackeyFont;
 
 		//ImGUI
-		ofxImGui::Gui m_gui;
+		//ofxImGui::Gui m_gui;
 
 		//game modes
 		int m_gameMode;
@@ -68,9 +69,53 @@ class ofApp : public ofBaseApp{
 		void update();
 		void draw();
 
+		
+
+
+		//ARDUINO
+		static const int PIN_ANALOG_INPUT = 5;
+		static const int PIN_PWM_OUTPUT = 3;
+		static const int PIN_OUTPUT_VIBRATION = 4;
+
+		static const int PIN_ANALOG_INPUT_RIGHT = 4;
+		static const int PIN_PWM_OUTPUT_RIGHT = 9;
+		static const int PIN_OUTPUT_VIBRATION_RIGHT = 8;
+		static const int PIN_INPUT_BUTTON_RIGHT = 2;
+
+
+		//Arduino stuff
+		ofArduino				m_arduino;
+		ofTrueTypeFont          m_font;
+		int					    m_input_val;	//sensor value
+		bool					m_bSetup;       //is Arduinio initialized yet
+		void setupArduino(const int& _version);
+		void updateArduino();
+		void digitalPinChanged(const int& pinNum);
+		void analogPinChanged(const int& pinNum);
+
+		//IR sensor variables / new added
+		int m_irReadingLeft;
+		int m_irReadingLeftCurr;
+		float m_propellerLeft;
+
+
+		int m_irReadingRight;
+		int m_irReadingRightCurr;
+		float m_propellerRight;
+
+
+		bool m_lerpLeft;
+		bool m_lerpRight;
+
+
+		float getIRDistance(int& val);
+		void lerpIRData();
+		void lerpIRDataRight();
+		void IRDataToAction(int propellerValue, int pinPwm, int pinVibration);
+
 		void keyPressed(int key);
 		void keyReleased(int key);
-		void mouseMoved(int x, int y );
+		void mouseMoved(int x, int y);
 		void mouseDragged(int x, int y, int button);
 		void mousePressed(int x, int y, int button);
 		void mouseReleased(int x, int y, int button);

@@ -6,6 +6,26 @@ void ofApp::setup(){
 	ofSetFrameRate(Config::APP_DESIRED_FRAMERATE);
 
 
+	//setup Arduino
+	// replace the string below with the serial port for your Arduino board
+	// you can get this from the Arduino application (Tools Menu -> Port) 
+	//m_arduino.connect("COM4", 57600);
+	m_arduino.connect(Config::ARDUINO_DEVICE_NAME, 57600);
+
+	m_input_val = Config::IR_MIN_READING;
+	m_irReadingLeft = Config::IR_MIN_READING;
+	m_irReadingLeftCurr = Config::IR_MIN_READING;
+	m_propellerLeft = 0;
+	m_lerpLeft = false;
+	m_lerpRight = false;
+
+	// Listen for EInitialized notification. this indicates that
+	// the arduino is ready to receive commands and it is safe to
+	// call setupArduino()
+	ofAddListener(m_arduino.EInitialized, this, &ofApp::setupArduino);
+
+	m_bSetup = false;
+
 	//init vars
 	m_spaceshipPos = ofVec2f(Config::APP_WINDOW_WIDTH / 2.0f, Config::APP_WINDOW_HEIGHT - 400.0f);
 	m_spaceshipRadius = 50.0f;
@@ -40,15 +60,34 @@ void ofApp::setup(){
 	m_slackeyFont.load("slackey.ttf", 28);
 	
 	//ImGUI setup
-	m_gui.setup();
+	//m_gui.setup();
+
+	
 
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
-	cout << m_gameMode << endl;
+	//cout << m_gameMode << endl;
+
+	updateArduino();
+	if (m_lerpLeft)
+	{
+		lerpIRData();
+		IRDataToAction(m_propellerLeft, PIN_PWM_OUTPUT, PIN_OUTPUT_VIBRATION);
+	}
+	if (m_lerpRight)
+	{
+		lerpIRDataRight();
+		IRDataToAction(m_propellerRight, PIN_PWM_OUTPUT_RIGHT, PIN_OUTPUT_VIBRATION_RIGHT);
+	}
+
 	if (m_gameMode == playing)
 	{
+		/**/
+		m_spaceshipSpeed = - 0.5f *m_propellerLeft - 0.5f *m_propellerRight;
+		//int ySpeed = m_propellerLeft + m_propellerRight;
+		m_spaceshipAngle = ofLerp(m_spaceshipAngle,m_propellerRight*7 - m_propellerLeft*7, 0.05f);
 		m_frames++;
 
 		//projectiles update
@@ -86,6 +125,7 @@ void ofApp::update(){
 		//spaceship movement
 		if (!m_crashed)
 		{
+			/*
 			if (abs(m_spaceshipSpeed) > 5.0f)
 			{
 				m_spaceshipSpeed = -5.5f;
@@ -93,15 +133,19 @@ void ofApp::update(){
 			if (m_spaceshipSpeed < 0.0f)
 				m_spaceshipSpeed -= 0.02f;
 			else if (m_spaceshipSpeed > 0.0f)
-				m_spaceshipSpeed = 0.0f;
+				m_spaceshipSpeed = 0.0f;*/
 			float xspeed = m_spaceshipSpeed * (sin(ofDegToRad(m_spaceshipAngle)));
-			float yspeed = m_spaceshipSpeed * abs(sin(ofDegToRad(m_spaceshipAngle)));
+			//float yspeed = m_spaceshipSpeed * abs(sin(ofDegToRad(m_spaceshipAngle)));
+			float yspeed = m_spaceshipSpeed;
 			float degrees = ofRadToDeg(ofDegToRad(m_spaceshipAngle));
 
+			
+			//cout <<yspeed << endl;
 			m_spaceshipPos.y += yspeed;
 			m_spaceshipPos.x += -xspeed;
 			m_spaceshipPos.y += 1.0f;	
 		}
+		
 
 		//crashing for 1.3 seconds then go to game over
 		if (m_crashed && ((ofGetElapsedTimef() - m_crashTime) > 1.3f))
@@ -133,6 +177,7 @@ void ofApp::draw(){
 		{
 			ofPushMatrix();
 			{
+				ofSetColor(255);
 				ofTranslate(m_spaceshipPos);
 				ofRotateDeg(m_spaceshipAngle);
 				ofSetRectMode(OF_RECTMODE_CENTER);
@@ -194,14 +239,14 @@ void ofApp::keyPressed(int key){
 		{
 			m_spaceshipSpeed -= 0.2f;
 			m_spaceshipAngle -= 1.0f;
-			cout << m_spaceshipAngle << endl;
+			//cout << m_spaceshipAngle << endl;
 		}
 		if (key == ' ')
 		{
 			if(ofGetElapsedTimef() - m_lastShotTime > 0.5f)
 			{
 				Projectile p;
-				cout << m_spaceshipAngle << endl;
+				//cout << m_spaceshipAngle << endl;
 				p.setup(m_spaceshipPos, m_spaceshipAngle, m_spaceshipSpeed);
 				m_projectiles.push_back(p);
 				m_lastShotTime = ofGetElapsedTimef();
@@ -436,3 +481,168 @@ void ofApp::resetGame()
 	m_gameMode = playing;
 }
 
+void ofApp::setupArduino(const int& _version)
+{
+	/**
+	 Look under examples/communication/firmata for more examples ..
+	 **/
+
+	m_bSetup = true;
+
+	// remove listener because we don't need it anymore
+	ofRemoveListener(m_arduino.EInitialized, this, &ofApp::setupArduino);
+
+	// print firmware name and version to the console
+	ofLogNotice() << m_arduino.getFirmwareName();
+	ofLogNotice() << "firmata v" << m_arduino.getMajorFirmwareVersion() << "." << m_arduino.getMinorFirmwareVersion();
+
+	//analog input
+	m_arduino.sendAnalogPinReporting(PIN_ANALOG_INPUT, ARD_ANALOG);
+	m_arduino.sendAnalogPinReporting(PIN_ANALOG_INPUT_RIGHT, ARD_ANALOG);
+
+	//PMW/digital output
+	m_arduino.sendDigitalPinMode(PIN_PWM_OUTPUT, ARD_PWM);
+	m_arduino.sendDigitalPinMode(PIN_OUTPUT_VIBRATION, ARD_OUTPUT);
+
+	m_arduino.sendDigitalPinMode(PIN_PWM_OUTPUT_RIGHT, ARD_PWM);
+	m_arduino.sendDigitalPinMode(PIN_OUTPUT_VIBRATION_RIGHT, ARD_OUTPUT);
+	m_arduino.sendDigitalPinMode(PIN_INPUT_BUTTON_RIGHT, ARD_INPUT);
+
+	ofAddListener(m_arduino.EDigitalPinChanged, this, &ofApp::digitalPinChanged);
+	ofAddListener(m_arduino.EAnalogPinChanged, this, &ofApp::analogPinChanged);
+}
+
+//--------------------------------------------------------------
+void ofApp::updateArduino() {
+
+	// update the arduino, get any data or messages.
+	// the call to m_arduino.update() is required
+
+	m_arduino.update();
+}
+
+void ofApp::digitalPinChanged(const int& pinNum) {
+	//cout << m_arduino.getDigital(pinNum) << endl;
+	if (pinNum == PIN_INPUT_BUTTON_RIGHT && m_arduino.getDigital(pinNum) == 0)
+	{
+		std::cout << "digital pin: " + ofToString(pinNum) + " : " + ofToString(m_arduino.getDigital(pinNum)) << std::endl;
+		Projectile p;
+		//cout << m_spaceshipAngle << endl;
+		p.setup(m_spaceshipPos, m_spaceshipAngle, m_spaceshipSpeed);
+		m_projectiles.push_back(p);
+		m_lastShotTime = ofGetElapsedTimef();
+		m_sfxPlayer.load(m_shootSFX);
+		m_sfxPlayer.play();
+	}
+	
+}
+
+void ofApp::analogPinChanged(const int& pinNum) {
+	//std::cout  << "analog pin: " + ofToString(pinNum) + " : " + ofToString(m_arduino.getAnalog(pinNum)) << std::endl;
+	if (pinNum == PIN_ANALOG_INPUT) {
+		m_irReadingLeftCurr = ofLerp(m_irReadingLeftCurr, m_arduino.getAnalog(pinNum), 0.5f);
+
+
+		//making sure the reading is within the range
+		//making it equal to the max if it goes above the accepted max value
+		if (m_irReadingLeftCurr > Config::IR_MAX_READING)
+			m_irReadingLeftCurr = Config::IR_MAX_READING;
+		//not storing the sensor reading if an outlier reading is detected
+
+		if (abs(m_irReadingLeftCurr - m_irReadingLeft) < 50 && m_irReadingLeftCurr > Config::IR_MIN_READING && m_irReadingLeftCurr < Config::IR_MAX_READING - 20)
+		{
+			//m_irReadingLeft = m_irReadingLeftCurr;
+			m_lerpLeft = false;
+		}
+		else
+		{
+			if (m_irReadingLeftCurr > Config::IR_MAX_READING - 20)
+				m_irReadingLeftCurr = Config::IR_MAX_READING + 20;
+			if (m_irReadingLeftCurr < Config::IR_MIN_READING)
+				m_irReadingLeftCurr = Config::IR_MIN_READING;
+			m_lerpLeft = true;
+		}
+		//cout << m_irReadingLeftCurr << endl;
+		//m_irReadingLeft = ofLerp(m_irReadingLeft, currReading, 0.05f);
+
+
+
+
+
+		 //send out pmw value
+
+
+
+	}
+
+	//detecting right controller movement
+	if (pinNum == PIN_ANALOG_INPUT_RIGHT) {
+
+		//get analog value
+		m_irReadingRightCurr = ofLerp(m_irReadingRightCurr, m_arduino.getAnalog(pinNum), 0.5f);
+		m_irReadingRightCurr = m_arduino.getAnalog(pinNum);
+		//cout << m_irReadingRightCurr << endl;
+	   //making sure the reading is within the range
+	   //making it equal to the max if it goes above the accepted max value
+		if (m_irReadingRightCurr > Config::IR_MAX_READING_RIGHT)
+			m_irReadingRightCurr = Config::IR_MAX_READING_RIGHT;
+		//not storing the sensor reading if an outlier reading is detected
+		if (abs(m_irReadingRightCurr - m_irReadingLeft) < 30 && m_irReadingRightCurr > Config::IR_MIN_READING_RIGHT && m_irReadingRightCurr < Config::IR_MAX_READING_RIGHT - 20)
+		{
+			//m_irReadingLeft = m_irReadingLeftCurr;
+			m_lerpRight = false;
+		}
+		else
+		{
+			if (m_irReadingRightCurr > Config::IR_MAX_READING_RIGHT - 20)
+				m_irReadingRightCurr = Config::IR_MAX_READING_RIGHT + 20;
+			if (m_irReadingRightCurr < Config::IR_MIN_READING_RIGHT)
+				m_irReadingRightCurr = Config::IR_MIN_READING_RIGHT;
+			m_lerpRight = true;
+		}
+
+		//m_irReadingLeft = ofLerp(m_irReadingLeft, currReading, 0.05f);
+
+
+		 //send out pmw value
+
+
+
+	}
+
+
+}
+
+
+
+void ofApp::lerpIRData()
+{
+	m_irReadingLeft = ofLerp(m_irReadingLeft, m_irReadingLeftCurr, 0.04f);
+	m_propellerLeft = (int)ofMap(m_irReadingLeft, Config::IR_MIN_READING, Config::IR_MAX_READING - 20, Config::PROPELLER_INTESITY_MIN, Config::PROPELLER_INTESITY_MAX, true);
+	
+	//m_spaceshipSpeed -=m_propellerLeft;
+
+	//m_spaceshipAngle = 7 * m_propellerLeft;
+	
+}
+
+
+void ofApp::lerpIRDataRight()
+{
+	m_irReadingRight = ofLerp(m_irReadingRight, m_irReadingRightCurr, 0.04f);
+	m_propellerRight = (int)ofMap(m_irReadingRight, Config::IR_MIN_READING_RIGHT, Config::IR_MAX_READING_RIGHT - 20, Config::PROPELLER_INTESITY_MIN, Config::PROPELLER_INTESITY_MAX, true);
+	
+}
+
+void ofApp::IRDataToAction(int propellerValue, int pinPwm, int pinVibration)
+{
+	if (playing)
+	{
+		m_arduino.sendPwm(pinPwm, ofMap(propellerValue, 0, 10, 0, 255, true));
+		if (propellerValue != 0)
+			m_arduino.sendDigital(pinVibration, ARD_HIGH);
+		else
+			m_arduino.sendDigital(pinVibration, ARD_LOW);
+	}
+	
+}
