@@ -13,7 +13,7 @@ namespace Config {
 	const int IR_MIN_READING = 200;
 	const int IR_MAX_READING = 500;
 
-	const int IR_MIN_READING_RIGHT = 200;
+	const int IR_MIN_READING_RIGHT = 220;
 	const int IR_MAX_READING_RIGHT = 480;
 
 	//spaceship varaibles - new

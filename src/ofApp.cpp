@@ -523,7 +523,7 @@ void ofApp::updateArduino() {
 
 void ofApp::digitalPinChanged(const int& pinNum) {
 	//cout << m_arduino.getDigital(pinNum) << endl;
-	if (pinNum == PIN_INPUT_BUTTON_RIGHT && m_arduino.getDigital(pinNum) == 0)
+	if (pinNum == PIN_INPUT_BUTTON_RIGHT && m_arduino.getDigital(pinNum) ==1)
 	{
 		std::cout << "digital pin: " + ofToString(pinNum) + " : " + ofToString(m_arduino.getDigital(pinNum)) << std::endl;
 		Projectile p;
@@ -542,7 +542,7 @@ void ofApp::analogPinChanged(const int& pinNum) {
 	if (pinNum == PIN_ANALOG_INPUT) {
 		m_irReadingLeftCurr = ofLerp(m_irReadingLeftCurr, m_arduino.getAnalog(pinNum), 0.5f);
 
-
+		cout << m_irReadingLeftCurr << endl;
 		//making sure the reading is within the range
 		//making it equal to the max if it goes above the accepted max value
 		if (m_irReadingLeftCurr > Config::IR_MAX_READING)
@@ -562,7 +562,7 @@ void ofApp::analogPinChanged(const int& pinNum) {
 				m_irReadingLeftCurr = Config::IR_MIN_READING;
 			m_lerpLeft = true;
 		}
-		//cout << m_irReadingLeftCurr << endl;
+		
 		//m_irReadingLeft = ofLerp(m_irReadingLeft, currReading, 0.05f);
 
 
