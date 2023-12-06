@@ -4,13 +4,17 @@
 #include "Config.h"
 #include "Projectile.h"
 #include "Rock.h"
-//#include "ofxImGui.h"
+#include "ofxImGui.h"
 #include "ofEvents.h"
 
 class ofApp : public ofBaseApp{
 
 	public:
-
+		struct propellerImg {
+			ofImage img;
+			int yDistance;
+			int size;
+		};
 		//spaceship vars
 
 		//to-do
@@ -48,6 +52,9 @@ class ofApp : public ofBaseApp{
 		ofImage m_rockUI;
 		ofImage m_explosionImage;
 
+		propellerImg m_propellerLeftImage;
+		propellerImg m_propellerRightImage;
+
 		//sounds
 		ofSoundPlayer m_musicPlayer;
 		ofSoundPlayer m_sfxPlayer;
@@ -59,7 +66,8 @@ class ofApp : public ofBaseApp{
 		ofTrueTypeFont m_slackeyFont;
 
 		//ImGUI
-		//ofxImGui::Gui m_gui;
+		ofxImGui::Gui m_gui;
+		bool m_showDebug;
 
 		//game modes
 		int m_gameMode;
@@ -96,12 +104,12 @@ class ofApp : public ofBaseApp{
 		//IR sensor variables / new added
 		int m_irReadingLeft;
 		int m_irReadingLeftCurr;
-		float m_propellerLeft;
+		int m_propellerLeft;
 
 
 		int m_irReadingRight;
 		int m_irReadingRightCurr;
-		float m_propellerRight;
+		int m_propellerRight;
 
 
 		bool m_lerpLeft;
@@ -129,8 +137,10 @@ class ofApp : public ofBaseApp{
 		void updateProjectiles();
 		void updateRocks();
 		void updateStars();
+		void updatePropellerImages();
 		void checkRockCollision();
 		void checkProjectileCollision();
 		void checkStarCollision();
 		void resetGame();
+		void debugMode();
 };

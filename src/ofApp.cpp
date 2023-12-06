@@ -16,6 +16,11 @@ void ofApp::setup(){
 	m_irReadingLeft = Config::IR_MIN_READING;
 	m_irReadingLeftCurr = Config::IR_MIN_READING;
 	m_propellerLeft = 0;
+
+	m_irReadingRight = Config::IR_MIN_READING_RIGHT;
+	m_irReadingRightCurr = Config::IR_MIN_READING_RIGHT;
+	m_propellerRight = 0;
+
 	m_lerpLeft = false;
 	m_lerpRight = false;
 
@@ -51,16 +56,29 @@ void ofApp::setup(){
 	m_rockUI.load("rockPlaceholder");
 	m_explosionImage.load("explosion.png");
 
+	m_propellerLeftImage.img.load(Config::PORPELLER_LEFT_IMG);
+	m_propellerLeftImage.yDistance = 0;
+	m_propellerLeftImage.size = 0;
+	
+	m_propellerRightImage.img.load(Config::PORPELLER_RIGHT_IMG);
+	m_propellerRightImage.yDistance = 0;
+	m_propellerRightImage.size = 0;
+
 	//sounds
 	m_hitSFX = "hit.wav";
 	m_collectSFX = "star.wav";
 	m_shootSFX = "shoot.mp3";
 
+	m_musicPlayer.load(Config::BACKGROUND_MUSIC);
+	m_musicPlayer.play();
+	m_musicPlayer.setLoop(true);
+
 	//load font
 	m_slackeyFont.load("slackey.ttf", 28);
-	
+
 	//ImGUI setup
-	//m_gui.setup();
+	m_gui.setup();
+	m_showDebug = false;
 
 	
 
@@ -87,9 +105,11 @@ void ofApp::update(){
 		/**/
 		m_spaceshipSpeed = - 0.5f *m_propellerLeft - 0.5f *m_propellerRight;
 		//int ySpeed = m_propellerLeft + m_propellerRight;
-		m_spaceshipAngle = ofLerp(m_spaceshipAngle,m_propellerRight*7 - m_propellerLeft*7, 0.05f);
+		m_spaceshipAngle = ofLerp(m_spaceshipAngle, m_propellerRight*7 - m_propellerLeft*7, 0.05f);
 		m_frames++;
 
+		//upsating propeller images
+		updatePropellerImages();
 		//projectiles update
 		updateProjectiles();
 		//creating new rocks
@@ -182,6 +202,8 @@ void ofApp::draw(){
 				ofRotateDeg(m_spaceshipAngle);
 				ofSetRectMode(OF_RECTMODE_CENTER);
 				m_spaceshipImage.draw(0, 0);
+				m_propellerLeftImage.img.draw(-15, m_spaceshipImage.getHeight() / 2 + m_propellerLeftImage.yDistance, m_propellerLeftImage.size, m_propellerLeftImage.size);
+				m_propellerRightImage.img.draw(15, m_spaceshipImage.getHeight() / 2 + m_propellerRightImage.yDistance, m_propellerRightImage.size, m_propellerRightImage.size);
 				ofSetRectMode(OF_RECTMODE_CORNER);
 			}
 			ofPopMatrix();
@@ -204,6 +226,10 @@ void ofApp::draw(){
 			m_stars[i].draw();
 		}
 
+
+		if (m_showDebug)
+			debugMode();
+		
 		ofSetColor(255);
 		//UI
 		m_slackeyFont.drawString(ofToString(m_starsCollected), 575.0f, 860.0f);
@@ -253,6 +279,10 @@ void ofApp::keyPressed(int key){
 				m_sfxPlayer.load(m_shootSFX);
 				m_sfxPlayer.play();
 			}
+		}
+		if (key == 9)
+		{
+			m_showDebug = !m_showDebug;
 		}
 	}
 }
@@ -396,6 +426,16 @@ void ofApp::updateStars()
 	}
 }
 
+//updating propeller image size and pos
+void ofApp::updatePropellerImages()
+{
+	m_propellerRightImage.size = ofLerp(m_propellerRightImage.size, m_propellerRight * 5, 0.05f);
+	m_propellerRightImage.yDistance = ofLerp(m_propellerRightImage.yDistance, m_propellerRight * 4, 0.05f);
+
+	m_propellerLeftImage.size = ofLerp(m_propellerLeftImage.size, m_propellerLeft * 5, 0.05f);
+	m_propellerLeftImage.yDistance = ofLerp(m_propellerLeftImage.yDistance, m_propellerLeft * 4, 0.05f);
+}
+
 void ofApp::checkRockCollision()
 {
 	for (int i = 0; i < m_rocks.size(); i++)
@@ -512,6 +552,16 @@ void ofApp::setupArduino(const int& _version)
 	ofAddListener(m_arduino.EAnalogPinChanged, this, &ofApp::analogPinChanged);
 }
 
+void ofApp::debugMode()
+{
+	m_gui.begin();
+		ImGui::Begin("Debug");
+		ImGui::SliderInt("Left", &m_propellerLeft, 0, 10);
+		ImGui::SliderInt("Right", &m_propellerRight, 0, 10);
+		ImGui::End();
+	m_gui.end();
+}
+
 //--------------------------------------------------------------
 void ofApp::updateArduino() {
 
@@ -533,6 +583,30 @@ void ofApp::digitalPinChanged(const int& pinNum) {
 		m_lastShotTime = ofGetElapsedTimef();
 		m_sfxPlayer.load(m_shootSFX);
 		m_sfxPlayer.play();
+
+		if (m_gameMode != playing)
+		{
+			if (m_gameMode == start)
+			{
+					m_gameMode = instructions;
+					m_pressTime = ofGetElapsedTimef();
+			}
+			if (m_gameMode == instructions)
+			{
+				if (ofGetElapsedTimef() - m_pressTime > 0.5f)
+				{
+					m_gameMode = playing;
+					m_pressTime = ofGetElapsedTimef();
+				}
+
+			}
+			if (m_gameMode == gameover)
+			{
+					cout << "hello" << endl;
+					resetGame();
+			}
+		}
+		
 	}
 	
 }
@@ -636,7 +710,7 @@ void ofApp::lerpIRDataRight()
 
 void ofApp::IRDataToAction(int propellerValue, int pinPwm, int pinVibration)
 {
-	if (playing)
+	if (m_gameMode == playing)
 	{
 		m_arduino.sendPwm(pinPwm, ofMap(propellerValue, 0, 10, 0, 255, true));
 		if (propellerValue != 0)

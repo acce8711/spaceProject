@@ -13,11 +13,16 @@ namespace Config {
 	const int IR_MIN_READING = 200;
 	const int IR_MAX_READING = 500;
 
-	const int IR_MIN_READING_RIGHT = 220;
+	const int IR_MIN_READING_RIGHT = 240;
 	const int IR_MAX_READING_RIGHT = 480;
 
 	//spaceship varaibles - new
 	const int PROPELLER_INTESITY_MIN = 0;
 	const int PROPELLER_INTESITY_MAX = 10;
+	const string PORPELLER_LEFT_IMG = "fuelLeft.png";
+	const string PORPELLER_RIGHT_IMG = "fuelRight.png";
+
+	//audio
+	const string BACKGROUND_MUSIC = "songBg.mp3";
 
 }
