@@ -158,8 +158,6 @@ void ofApp::update(){
 			float xspeed = m_spaceshipSpeed * (sin(ofDegToRad(m_spaceshipAngle)));
 			//float yspeed = m_spaceshipSpeed * abs(sin(ofDegToRad(m_spaceshipAngle)));
 			float yspeed = m_spaceshipSpeed;
-			float degrees = ofRadToDeg(ofDegToRad(m_spaceshipAngle));
-
 			
 			//cout <<yspeed << endl;
 			m_spaceshipPos.y += yspeed;
@@ -203,8 +201,8 @@ void ofApp::draw(){
 				ofRotateDeg(m_spaceshipAngle);
 				ofSetRectMode(OF_RECTMODE_CENTER);
 				m_spaceshipImage.draw(0, 0);
-				m_propellerLeftImage.img.draw(-15, m_spaceshipImage.getHeight() / 2 + m_propellerLeftImage.yDistance, m_propellerLeftImage.size, m_propellerLeftImage.size);
-				m_propellerRightImage.img.draw(15, m_spaceshipImage.getHeight() / 2 + m_propellerRightImage.yDistance, m_propellerRightImage.size, m_propellerRightImage.size);
+				m_propellerLeftImage.img.draw(15, m_spaceshipImage.getHeight() / 2 + m_propellerLeftImage.yDistance, m_propellerLeftImage.size, m_propellerLeftImage.size);
+				m_propellerRightImage.img.draw(-15, m_spaceshipImage.getHeight() / 2 + m_propellerRightImage.yDistance, m_propellerRightImage.size, m_propellerRightImage.size);
 				ofSetRectMode(OF_RECTMODE_CORNER);
 			}
 			ofPopMatrix();
@@ -266,14 +264,12 @@ void ofApp::keyPressed(int key){
 		{
 			m_spaceshipSpeed -= 1.0f;
 			m_spaceshipAngle -= 1.0f;
-			//cout << m_spaceshipAngle << endl;
 		}
 		if (key == ' ')
 		{
 			if(ofGetElapsedTimef() - m_lastShotTime > 0.5f)
 			{
 				Projectile p;
-				//cout << m_spaceshipAngle << endl;
 				p.setup(m_spaceshipPos, m_spaceshipAngle, m_spaceshipSpeed);
 				m_projectiles.push_back(p);
 				m_lastShotTime = ofGetElapsedTimef();
@@ -314,7 +310,6 @@ void ofApp::keyReleased(int key){
 	{
 		if (key == ' ')
 		{
-			cout << "hello" << endl;
 			resetGame();
 		}
 	}
@@ -585,13 +580,19 @@ void ofApp::digitalPinChanged(const int& pinNum) {
 	if (pinNum == PIN_INPUT_BUTTON_RIGHT && m_arduino.getDigital(pinNum) ==1)
 	{
 		std::cout << "digital pin: " + ofToString(pinNum) + " : " + ofToString(m_arduino.getDigital(pinNum)) << std::endl;
-		Projectile p;
-		//cout << m_spaceshipAngle << endl;
-		p.setup(m_spaceshipPos, m_spaceshipAngle, m_spaceshipSpeed);
-		m_projectiles.push_back(p);
-		m_lastShotTime = ofGetElapsedTimef();
-		m_sfxPlayer.load(m_shootSFX);
-		m_sfxPlayer.play();
+		if (m_gameMode == playing)
+		{
+			if (ofGetElapsedTimef() - m_lastShotTime > 0.5f)
+			{
+				Projectile p;
+				p.setup(m_spaceshipPos, m_spaceshipAngle, m_spaceshipSpeed);
+				m_projectiles.push_back(p);
+				m_lastShotTime = ofGetElapsedTimef();
+				m_sfxPlayer.load(m_shootSFX);
+				m_sfxPlayer.play();
+			}
+		}
+
 
 		if (m_gameMode != playing)
 		{
@@ -611,8 +612,7 @@ void ofApp::digitalPinChanged(const int& pinNum) {
 			}
 			if (m_gameMode == gameover)
 			{
-					cout << "hello" << endl;
-					resetGame();
+=					resetGame();
 			}
 		}
 		
