@@ -8,7 +8,7 @@ void Projectile::setup(ofVec2f pos, float angle, float speed)
 	m_xSpeed = m_projectileSpeed * cos(m_projectileAngle);
 	m_ySpeed = m_projectileSpeed * sin(m_projectileAngle);
  	m_radius = 10.0f;
-	cout << m_projectilePos << endl;
+	m_isVisible = true;
 }
 
 void Projectile::update()
@@ -19,13 +19,17 @@ void Projectile::update()
 
 void Projectile::draw()
 {
-	ofSetColor(255);
-	ofPushMatrix();
+	if (m_isVisible)
 	{
-		ofTranslate(m_projectilePos);
-		ofSetRectMode(OF_RECTMODE_CENTER);
-		ofDrawCircle(0, 0, m_radius);
-		ofSetRectMode(OF_RECTMODE_CORNER);
+		ofSetColor(255);
+		ofPushMatrix();
+		{
+			ofTranslate(m_projectilePos);
+			ofSetRectMode(OF_RECTMODE_CENTER);
+			ofDrawCircle(0, 0, m_radius);
+			ofSetRectMode(OF_RECTMODE_CORNER);
+		}
+		ofPopMatrix();
 	}
-	ofPopMatrix();
+
 }

@@ -19,8 +19,8 @@ namespace Config {
 	//spaceship varaibles - new
 	const int PROPELLER_INTESITY_MIN = 0;
 	const int PROPELLER_INTESITY_MAX = 10;
-	const string PORPELLER_LEFT_IMG = "fuelLeft.png";
-	const string PORPELLER_RIGHT_IMG = "fuelRight.png";
+	const string PROPELLER_LEFT_IMG = "fuelLeft.png";
+	const string PROPELLER_RIGHT_IMG = "fuelRight.png";
 
 	//audio
 	const string BACKGROUND_MUSIC = "songBg.mp3";

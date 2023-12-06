@@ -11,6 +11,7 @@ public:
 	float m_xSpeed;
 	float m_ySpeed;
 	float m_radius;
+	bool m_isVisible; 
 	ofImage* m_projectileImage;
 	
 	//projectiles will be shot out from the spaceship

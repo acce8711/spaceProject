@@ -56,11 +56,11 @@ void ofApp::setup(){
 	m_rockUI.load("rockPlaceholder");
 	m_explosionImage.load("explosion.png");
 
-	m_propellerLeftImage.img.load(Config::PORPELLER_LEFT_IMG);
+	m_propellerLeftImage.img.load(Config::PROPELLER_LEFT_IMG);
 	m_propellerLeftImage.yDistance = 0;
 	m_propellerLeftImage.size = 0;
 	
-	m_propellerRightImage.img.load(Config::PORPELLER_RIGHT_IMG);
+	m_propellerRightImage.img.load(Config::PROPELLER_RIGHT_IMG);
 	m_propellerRightImage.yDistance = 0;
 	m_propellerRightImage.size = 0;
 
@@ -69,6 +69,7 @@ void ofApp::setup(){
 	m_collectSFX = "star.wav";
 	m_shootSFX = "shoot.mp3";
 
+	m_sfxPlayer.setVolume(0.7f);
 	m_musicPlayer.load(Config::BACKGROUND_MUSIC);
 	m_musicPlayer.play();
 	m_musicPlayer.setLoop(true);
@@ -258,12 +259,12 @@ void ofApp::keyPressed(int key){
 	{
 		if (key == 'A' || key == 'a')
 		{
-			m_spaceshipSpeed -= 0.2f;
+			m_spaceshipSpeed -= 1.0f;
 			m_spaceshipAngle += 1.0f;
 		}
 		if (key == 'D' || key == 'd')
 		{
-			m_spaceshipSpeed -= 0.2f;
+			m_spaceshipSpeed -= 1.0f;
 			m_spaceshipAngle -= 1.0f;
 			//cout << m_spaceshipAngle << endl;
 		}
@@ -387,7 +388,6 @@ void ofApp::updateProjectiles()
 			m_projectiles[i].m_projectilePos.x > Config::APP_WINDOW_WIDTH
 			)
 		{
-			m_rocksHit++;
 			m_projectiles.erase(m_projectiles.begin() + i);
 		}
 	}
@@ -442,15 +442,18 @@ void ofApp::checkRockCollision()
 	{
 		if (ofDist(m_rocks[i].m_pos.x, m_rocks[i].m_pos.y, m_spaceshipPos.x, m_spaceshipPos.y) < (m_rocks[i].m_radius + m_spaceshipRadius))
 		{
-			if (m_crashed != true)
+			if (m_rocks[i].m_isVisible)
 			{
-				m_crashed = true;
-				m_crashTime = ofGetElapsedTimef();
-				m_sfxPlayer.load(m_hitSFX);
-				m_sfxPlayer.play();
+				if (m_crashed != true)
+				{
+					m_crashed = true;
+					m_crashTime = ofGetElapsedTimef();
+					m_sfxPlayer.load(m_hitSFX);
+					m_sfxPlayer.play();
+				}
+				m_crashPos = ofVec2f((m_rocks[i].m_pos + m_spaceshipPos) / 2.0f);
+				m_rocks.erase(m_rocks.begin() + i);
 			}
-			m_crashPos = ofVec2f((m_rocks[i].m_pos + m_spaceshipPos) / 2.0f);
-			m_rocks.erase(m_rocks.begin() + i);
 		}
 	}
 }
@@ -463,11 +466,17 @@ void ofApp::checkProjectileCollision()
 		{
 			if (ofDist(m_rocks[i].m_pos.x, m_rocks[i].m_pos.y, m_projectiles[j].m_projectilePos.x, m_projectiles[j].m_projectilePos.y) < (m_rocks[i].m_radius + m_projectiles[j].m_radius))
 			{
-				ofVec2f collisionPos = ofVec2f(m_rocks[i].m_pos - m_projectiles[j].m_projectilePos);
-				m_rocks.erase(m_rocks.begin() + i);
-				m_projectiles.erase(m_projectiles.begin() + j);
-				m_sfxPlayer.load(m_hitSFX);
-				m_sfxPlayer.play();
+				if (m_rocks[i].m_isVisible && m_projectiles[j].m_isVisible)
+				{
+					ofVec2f collisionPos = ofVec2f(m_rocks[i].m_pos - m_projectiles[j].m_projectilePos);
+					//m_rocks.erase(m_rocks.begin() + i);
+					//m_projectiles.erase(m_projectiles.begin() + j);
+					m_sfxPlayer.load(m_hitSFX);
+					m_sfxPlayer.play();
+					m_rocks[i].m_isVisible = false;
+					m_projectiles[j].m_isVisible = false;
+				}
+
 			}
 		}
 
